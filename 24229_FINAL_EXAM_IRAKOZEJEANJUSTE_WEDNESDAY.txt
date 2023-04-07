@@ -12,6 +12,7 @@ GRANT UNLIMITED TABLESPACE TO username;
 -------------------------------------------------------------------------------------------------------------------------------------------
 
 --QUESTION 1
+--CREATE A TABLE GIVEN THE DATA
 
 CREATE TABLE emp_table(
 emp_code varchar(20),
