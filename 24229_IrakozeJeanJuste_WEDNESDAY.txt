@@ -1,0 +1,78 @@
+--QUESTION 1
+
+CREATE OR REPLACE PROCEDURE UpdateSalary
+IS
+CURSOR c_update IS SELECT emp_code, emp_first_name, emp_last_name, emp_salary FROM employee WHERE emp_code>10 AND emp_salary>2000;
+BEGIN
+    dbms_output.put_line('Before Update');
+    dbms_output.put_line('-------------');
+FOR rec_employee IN c_update
+ LOOP
+    dbms_output.put_line(rec_employee.emp_first_name || ' ' || rec_employee.emp_last_name || ' has a salary of: ' || rec_employee.emp_salary);
+ END LOOP;
+UPDATE employee SET emp_salary=emp_salary+(emp_salary*0.02) WHERE emp_code>10 AND emp_salary>2000;
+    dbms_output.put_line('After Update');
+    dbms_output.put_line('------------');
+FOR rec_employee IN c_update
+ LOOP
+    dbms_output.put_line(rec_employee.emp_first_name || ' ' || rec_employee.emp_last_name || ' has a new salary of: ' || rec_employee.emp_salary);
+ END LOOP;
+END;
+/
+BEGIN
+   UpdateSalary;
+END;
+/
+
+--QUESTION 2
+
+CREATE OR REPLACE FUNCTION HighNumber(A IN number, B IN number)   
+RETURN number  
+IS  
+    C number;  
+BEGIN  
+   IF (A > B) THEN  
+      C:= A;  
+   ELSE  
+      C:= B;  
+   END IF;  
+  
+   RETURN C;  
+END; 
+/
+DECLARE  
+   ira number:=&ira; 
+   jea number:=&jea;  
+   jus number:=0; 
+BEGIN    
+   jus:= HighNumber(ira, jea);  
+   dbms_output.put_line(' The Highest number between '||  ira  || ' and ' ||  jea  || ' is ' || jus);  
+END;  
+/  
+
+--QUESTION 3
+
+CREATE OR REPLACE FUNCTION Displaying(
+  depart employee.emp_department%type) 
+RETURN sys_refcursor IS name_depart sys_refcursor;
+BEGIN
+OPEN name_depart FOR SELECT emp_first_name, emp_last_name, depart_name FROM employee JOIN department ON employee.emp_department=department.depart_no WHERE emp_department=depart;
+RETURN name_depart;
+END;
+/
+DECLARE
+  department_no employee.emp_department%type:=&department_no;
+  name_of_depart department.depart_name%type;
+  cursor_name_depart sys_refcursor;
+  fname employee.emp_first_name%type;
+  lname employee.emp_last_name%type;
+BEGIN
+  cursor_name_depart:=Displaying(department_no);
+   LOOP
+FETCH cursor_name_depart INTO fname, lname, name_of_depart;
+EXIT WHEN cursor_name_depart%notfound;
+   dbms_output.put_line(fname || ' ' || lname || ' ' ||name_of_depart);
+   END LOOP;
+CLOSE cursor_name_depart; 
+END;
+/

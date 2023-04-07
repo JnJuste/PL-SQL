@@ -1,0 +1,109 @@
+-- Create a new user to log on in the database
+ 
+
+CREATE USER username IDENTIFIED BY password;
+GRANT ALL PRIVILEGES to username;
+SELECT * FROM session_privs ORDER BY privilege;
+
+GRANT CREATE TABLE TO username;
+GRANT CREATE TRIGGER TO username;
+GRANT CREATE SESSION TO username;
+GRANT UNLIMITED TABLESPACE TO username;
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+--QUESTION 1
+
+CREATE TABLE emp_table(
+emp_code varchar(20),
+emp_first_name varchar(20),
+emp_last_name varchar(20),
+emp_salary float,
+emp_address varchar(20));
+
+INSERT INTO emp_table VALUES('E001', 'Richard', 'Cipher', 245000.0, 'Rwanda');
+INSERT INTO emp_table VALUES('E002', 'John', 'Wick', 345000.0, 'Burundi');
+INSERT INTO emp_table VALUES('E003', 'Anna', 'Franck', 123400.0, 'Kenya');
+INSERT INTO emp_table VALUES('E004', 'Louise', 'Newton', 768900.0, 'Uganda');
+INSERT INTO emp_table VALUES('E005', 'Marie', 'Currie', 678900.0, 'Tanzanie');
+INSERT INTO emp_table VALUES('E006', 'Alfred', 'Butler', 345670.0, 'Chad');
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+--QUESTION 2
+
+--Package Specification
+
+CREATE OR REPLACE PACKAGE EMP_DETAILS IS
+PROCEDURE set_record (p_emp_rec IN emp_table%ROWTYPE);
+FUNCTION get_record (p_emp_no IN VARCHAR) RETURN emp_table%ROWTYPE;
+END EMP_DETAILS;
+/
+
+--Package Body
+
+CREATE OR REPLACE PACKAGE BODY EMP_DETAILS IS
+PROCEDURE set_record (p_emp_rec IN emp_table%ROWTYPE) IS
+
+BEGIN
+INSERT INTO emp_table VALUES
+(p_emp_rec.emp_code,
+ p_emp_rec.emp_first_name,
+ p_emp_rec.emp_last_name,
+ p_emp_rec.emp_salary,
+ p_emp_rec.emp_address);
+END set_record;
+
+FUNCTION get_record (p_emp_no IN VARCHAR) RETURN emp_table%ROWTYPE 
+IS
+get_function emp_table%ROWTYPE;
+
+BEGIN
+SELECT * INTO get_function FROM emp_table WHERE emp_code = p_emp_no;
+RETURN get_function;
+
+END get_record;
+
+END EMP_DETAILS;
+/
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+--QUESTION 3
+
+DECLARE
+t emp_table%ROWTYPE;
+s emp_table%ROWTYPE;
+
+BEGIN
+t.emp_code:='&emp_code';
+t.emp_first_name:='&emp_first_name';
+t.emp_last_name:='&emp_last_name';
+t.emp_salary :=&emp_salary;
+t.emp_address :='&emp_address';
+
+EMP_DETAILS.set_record(t);
+s:=EMP_DETAILS.get_record(t.emp_code);
+dbms_output.put_line(s.emp_code|| ' | ' || s.emp_first_name || ' | ' || s.emp_last_name || ' | ' || s.emp_salary || ' | ' ||s.emp_address);
+END;
+/
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM emp_table;
+
+--QUESTION 4
+
+CREATE OR REPLACE TRIGGER code_dupl
+BEFORE INSERT ON emp_table
+FOR EACH ROW 
+DECLARE
+count_code integer;
+BEGIN
+SELECT count(emp_code) INTO count_code FROM emp_table WHERE emp_code = :NEW.emp_code;
+IF (count_code > 0) THEN
+RAISE_APPLICATION_ERROR(-20379, 'Sorry! The emp_code of the employee already exists in the database');
+END IF;
+END;
+/
+
+--Testing the trigger if it is working
+INSERT INTO emp_table VALUES('E005', 'Marie', 'Currie', 678900.0, 'Tanzanie');
+-------------------------------------------------------------------------------------------------------------------------------------------

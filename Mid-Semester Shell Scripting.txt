@@ -1,0 +1,74 @@
+
+2)Write a Script to create 10 users using this format(your_name_) and 
+  enable the to change their password after Login
+----------------------------------------------------------------------
+
+#!/bin/bash
+
+ssh root@70.70.7.3 ""cd /home/SERVER:Desktop && zip -r /home/SERVER/Desktop/files.zip *"
+
+scp root@70.70.7.3:/home/Server/Desktop/files.zip
+unzip files.zip
+
+echo "Done!"
+
+Cfr ODILON
+
+
+2)Write a Script to create 10 users using this format(your_name_) and 
+  enable the to change their password after Login
+----------------------------------------------------------------------
+
+#!/bin/bash
+
+for i in `seq 1 10`
+do 
+  useradd Juste_$i 
+  echo "linux@24229" | passwd --stdin Juste_$i
+  chage -d 0 Juste_$i
+done
+======================================================================================
+3)Write a Script to draw a triangle at the first time! When runned for 
+  the second time, it show draw a triangle
+----------------------------------------------------------------------
+
+#!/bin/bash
+
+if [ -f figure.txt ] && grep -q "square" figure.txt; then
+
+echo "Drawing a triangle: "
+echo "    *"
+echo "   *** "
+echo "  *****"
+echo " *******"
+echo "*********"
+
+echo "triangle" > figure.txt
+else
+
+echo "Drawing a square: "
+echo "*********"
+echo "*       *"
+echo "*       *"
+echo "*       *"
+echo "*********"
+
+echo "square" > figure.txt
+fi
+
+======================================================================================
+4)Write a Script to combine all these 4 script and run the using this script
+----------------------------------------------------------------------------
+
+#!/bin/bash
+
+#Running the 1st script
+sh script1.sh
+
+#Running the 2nd script
+sh script2.sh
+
+#Running the 3rd script, twice(Triangle and the a square)
+sh script3.sh
+sh script3.sh
+

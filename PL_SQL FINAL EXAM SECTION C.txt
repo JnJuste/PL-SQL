@@ -1,0 +1,131 @@
+--JnJuste
+
+--CREATION OF Table employee
+
+CREATE TABLE EMPLOYEE(
+emp_code integer UNIQUE,
+emp_first_name varchar(20),
+emp_last_name varchar(20),
+emp_salary float,
+emp_address varchar(20),
+sal_update_counter integer);
+
+INSERT INTO employee VALUES(1, 'John', 'Doe', 15000, 'Kigali', 0);
+INSERT INTO employee VALUES(2, 'Hugo', 'Javier', 7690, 'Kampala', 1);
+INSERT INTO employee VALUES(3, 'Lynn', 'Dolores', 8965, 'Bujumbura', 1);
+INSERT INTO employee VALUES(4, 'Queen', 'Sheba', 10000, 'Goma', 2);
+INSERT INTO employee VALUES(5, 'Jedi', 'Kenobi', 18000, 'Kinshasa', 0);
+ 
+
+--SPECIFICATION
+
+CREATE OR REPLACE PACKAGE employee_package IS
+PROCEDURE update_emp_record(e_code employee.emp_code%type);
+FUNCTION delete_emp_record(e_code employee.emp_code%type) 
+RETURN boolean;
+END employee_package;
+/
+
+--BODY
+
+CREATE OR REPLACE PACKAGE BODY employee_package AS 
+   PROCEDURE update_emp_record(e_code employee.emp_code%type)
+IS
+     csal employee.emp_salary%type;
+     asal employee.emp_salary%type;
+     msal employee.emp_salary%type; 
+     cou employee.sal_update_counter%type;
+     --fname employee.emp_first_name%type;
+     --lname employee.emp_last_name%type;
+ BEGIN 
+     SELECT MIN(emp_salary) INTO msal FROM employee;
+     SELECT AVG(emp_salary) INTO asal FROM employee;
+     SELECT emp_salary, sal_update_counter INTO csal, cou FROM employee WHERE emp_code=e_code;
+     --SELECT fname, lname INTO emp_first_name, emp_last_name employee WHERE emp_code=e_code;
+
+   --Displaying the Minimum and Average Salary, the salary before update 
+   dbms_output.put_line('The initial salary is: '||csal);
+   dbms_output.put_line('The minimum salary is: '||msal);
+   dbms_output.put_line('The average salary is: '||asal);
+
+    IF (csal>=msal) AND (csal<=asal) THEN
+      IF cou=1 THEN
+         
+         --Updating Employees whose salary is BTN MIN and AVG and has sal_update_counter=1
+
+         UPDATE employee SET sal_update_counter = sal_update_counter + 1 WHERE emp_code=e_code;
+         UPDATE employee SET emp_salary= emp_salary + 100 WHERE emp_code=e_code;
+
+         --dbms_output.put_line(''|| fname || '' || lname || ' has a new salary of ' ||csal);
+         dbms_output.put_line('The sal_update_counter is incremeneted by 1');
+         dbms_output.put_line('Salary updated successfully');
+      ELSE
+      
+      dbms_output.put_line('Not updated. The salary update counter is not equal to 1');
+     END IF;
+    ELSE
+      dbms_output.put_line('Not updated. The salary is not between the MIN and AVG');
+    END IF;
+   
+   EXCEPTION
+   WHEN no_data_found THEN
+   dbms_output.put_line('No data found');
+   WHEN too_many_rows THEN
+   dbms_output.put_line('Too many rows');
+   END;
+   
+   FUNCTION delete_emp_record(e_code employee.emp_code%type) 
+   RETURN boolean
+   IS sal_up employee.sal_update_counter%type;
+
+   BEGIN
+   SELECT sal_update_counter INTO sal_up FROM employee WHERE emp_code=e_code;
+
+      --Deleting Employees whom sal_update_counter=2
+
+      IF (sal_up=2) THEN
+        DELETE FROM employee WHERE emp_code=e_code;
+        dbms_output.put_line('The employee with counter 2 has been deleted successfully');
+      RETURN TRUE;
+      ELSE
+      dbms_output.put_line('No employee with counter 2');
+      RETURN FALSE;
+      END IF;
+     
+   EXCEPTION
+   WHEN no_data_found THEN
+   dbms_output.put_line('No data found');
+   WHEN too_many_rows THEN
+   dbms_output.put_line('Too many rows');
+   END;
+
+END employee_package;
+/
+
+-- Create a trigger that prevents update of any employee salary if the time is between 5PM and 7AM
+
+CREATE OR REPLACE TRIGGER prevent_up
+BEFORE UPDATE ON EMPLOYEE
+DECLARE
+start_time varchar(20):='07:00';
+end_time varchar(20):='17:00';
+now_time varchar(20):=TO_CHAR(SYSDATE, 'HH24:MI');
+no_update_this_time EXCEPTION;
+PRAGMA EXCEPTION_INIT (no_update_this_time, -20000);
+
+BEGIN
+IF (now_time BETWEEN end_time AND start_time) THEN
+RAISE_APPLICATION_ERROR(-20000, 'You cannot update employee details between 5PM and 7AM');
+END IF;
+END;
+/
+
+--Reference to package elements
+
+DECLARE
+delete_employee Boolean;
+BEGIN
+employee_package.update_emp_record(1);
+delete_employee := employee_package.delete_emp_record(1);
+END;
+/
